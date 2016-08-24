@@ -1,0 +1,74 @@
+/********************************************************
+Programa solicitado pelo o professor de SO, Feito dia 20/08
+Utilização de pipes. 
+
+- Programa passa uma string do pai para o filho, que a recebe
+e a ler imprime e conta seus caracteres.
+
+Para compilar: gcc -o pipe pipe.c
+Para executar: ./pipe
+
+**********************************************************/
+
+#include <stdio.h> // Bilbioteca de entrada e saida
+#include <stdlib.h> // Biblioteca de ordenação
+#include <sys/types.h> // Biblioteca de temporização
+#include <unistd.h> // Biblioteca que da acesso a ficheiros e directorias
+
+#define BUFFER 256  // Criei um BUFFER de tamanho fixo de 256, para armazenar as mensagens e passar para enviar do pai para o filho.
+
+int main(void)
+{
+    int fd[2]; /* File descriptors pro Pipe, ela é de tamanho 2*/
+    pid_t pid; /* Variável para armazenar o pid*/
+
+    /* Criando o Pipe */
+    if(pipe(fd)<0) {
+        perror("pipe") ;
+        return -1 ;
+    }
+
+    /* Criando o processo filho*/
+    if ((pid = fork()) < 0)
+    {
+        perror("fork"); //Criando a chamada de sistema para a criaçao dos processo.
+        exit(1);
+    }
+    /* Processo Pai*/
+    if (pid > 0)
+    {
+        /*No pai, vamos ESCREVER, então vamos fechar a LEITURA do Pipe neste lado*/
+        close(fd[0]);
+
+        char str[BUFFER] = "chella!!"; // Aqui no BUFFER professor sera passada a mensagem do pai para o filho!
+        printf("String enviada pelo pai no Pipe: '%s'\n", str);
+
+        /* Escrevendo a string no pipe */
+        write(fd[1], str, sizeof(str) + 1);
+        exit(0);
+    }
+    /* Processo Filho*/
+    else
+    {
+        char str_recebida[BUFFER]; // Aqui onde será recebida a string enviada pelo o BUFFER do processo pai!
+
+        /* No filho vailer.
+           Então fecha a entrada de ESCRITA do pipe */
+        close(fd[1]);
+
+        /* Lendo o que foi escrito no pipe, e armazenando isso em 'str_recebida' */
+        read(fd[0], str_recebida, sizeof(str_recebida));
+
+        printf("String lida pelo filho no Pipe : '%s'\n\n", str_recebida);
+
+        int total=0;
+
+        while( str_recebida[total] != '\0') // contador de caractere no pipe filho
+        total++;
+
+        printf("qnt de caractere que o pipe filho leu: '%d'\n\n", total); // Aqui imprime a string recebida pelo o processo filho
+        exit(0);
+    }
+
+    return(0);
+}
