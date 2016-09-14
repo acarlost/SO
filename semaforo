@@ -1,0 +1,57 @@
+/*
+Compilar: gcc -o semaforo semaforo.c -lpthread
+Executar: ./semaforo
+
+Executando: Ele inicialmente vai iniciar a thread, liberando o semaforo, enquanto estiver aberto
+vai imprimir na tela uma mensagem com um determinado espaço de tempo, aperte ENTER e o semaforo
+vai ser fechado, para abrir so apertar Enter novamente e ele vai executar pela ultima vez com o
+semaforo aberto.
+
+*/
+
+#include <stdio.h> // Biblioteca de entrada e saida
+#include <string.h> // strings 
+#include <stdlib.h> // alocação de memoria
+#include <pthread.h> // Para usar threads
+#include <unistd.h> // posix
+#include <semaphore.h> // Usar semaforo
+
+sem_t semaforo;
+
+void threadfunc() { //Função da thread, ela vai ficar imprimindo enquando o semaforo permitir
+    while (1) {
+        sem_wait(&semaforo);
+        printf("Olá, Estou na thread\n");
+        sem_post(&semaforo);
+        sleep(1); // tempo de espera de cada impressão
+    }
+}
+
+int main(void) {
+    
+    // inicializaçao do semaforo, so usei threads no processo, setei para 1
+    sem_init(&semaforo, 0, 1);
+    
+    pthread_t *mythread;
+    
+    mythread = (pthread_t *)malloc(sizeof(*mythread));
+    
+    // Iniciei a thread
+    printf("Iniciando thread, Semaforo aberto.\n");
+    pthread_create(mythread, NULL, (void*)threadfunc, NULL);
+    
+    getchar();
+    
+    sem_wait(&semaforo); //
+    printf("Semaforo fechado.\n");
+    
+    // Compartilhando com as threads
+    getchar();
+    
+    printf("Semaforo aberto.\n");
+    sem_post(&semaforo);
+    
+    getchar();
+    
+    return 0;
+}
